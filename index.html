@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>AltoBeam 估值模拟器 · 吉富投资</title>
+    <!-- ECharts CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js">
+    </script>
+    <style>
+        /* ---------- Reset & Base ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: #f0f2f5;
+            color: #1a2332;
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            max-width: 1480px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            padding: 28px 32px 34px;
+            transition: all 0.2s;
+        }
+
+        /* ---------- Header with Logo ---------- */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 18px;
+            border-bottom: 2px solid #eef1f5;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-text {
+            width: 54px;
+            height: 54px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .brand-text h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0b1a33;
+            line-height: 1.2;
+        }
+
+        .brand-text h1 .en {
+            font-weight: 400;
+            font-size: 19px;
+            color: #5a6a7a;
+            margin-left: 8px;
+        }
+
+        .brand-text .sub {
+            font-size: 13px;
+            color: #6b7a8a;
+            margin-top: 2px;
+        }
+
+        .lang-toggle {
+            font-size: 13px;
+            color: #3b82f6;
+            border: 1px solid #3b82f6;
+            border-radius: 20px;
+            padding: 4px 14px;
+            cursor: default;
+            background: #f0f7ff;
+            white-space: nowrap;
+        }
+
+        /* ---------- Base Data Bar ---------- */
+        .base-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px 32px;
+            background: #f7f9fc;
+            border-radius: 16px;
+            padding: 12px 24px;
+            margin-bottom: 22px;
+            border: 1px solid #e9edf2;
+        }
+
+        .base-item {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        .base-item .label {
+            font-weight: 500;
+            color: #3d4e62;
+        }
+
+        .base-item .label-en {
+            font-size: 12px;
+            color: #8899aa;
+            margin-left: 4px;
+            font-weight: 400;
+        }
+
+        .base-item .value {
+            font-weight: 600;
+            color: #0b1a33;
+            font-size: 16px;
+        }
+
+        .base-item .unit {
+            font-weight: 400;
+            font-size: 13px;
+            color: #5a6a7a;
+            margin-left: 2px;
+        }
+
+        .base-divider {
+            width: 1px;
+            height: 26px;
+            background: #dce2ea;
+            align-self: center;
+        }
+
+        /* ---------- Slider Controls ---------- */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px 18px;
+            margin-bottom: 26px;
+        }
+
+        .control-card {
+            background: #fafbfd;
+            border-radius: 16px;
+            padding: 14px 14px 16px;
+            border: 1px solid #eef1f5;
+            transition: border-color 0.2s;
+        }
+
+        .control-card:hover {
+            border-color: #cdd7e3;
+        }
+
+        .control-card .ctrl-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+
+        .control-card .ctrl-label .name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a2b3e;
+        }
+
+        .control-card .ctrl-label .name-en {
+            font-weight: 400;
+            font-size: 12px;
+            color: #8899aa;
+            margin-left: 4px;
+        }
+
+        .control-card .ctrl-label .val {
+            font-weight: 650;
+            font-size: 17px;
+            color: #1a3b6e;
+            min-width: 55px;
+            text-align: right;
+            letter-spacing: 0.2px;
+        }
+
+        .control-card input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right, #d0d8e4, #3b82f6 var(--fill-pct, 50%), #d0d8e4 var(--fill-pct, 50%));
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            transition: background 0.05s;
+        }
+
+        .control-card input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+            transition: transform 0.15s, box-shadow 0.15s;
+            cursor: grab;
+        }
+
+        .control-card input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.12);
+            box-shadow: 0 3px 14px rgba(37, 99, 235, 0.35);
+        }
+
+        .control-card input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+            cursor: grab;
+        }
+
+        .control-card .range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #8899aa;
+            margin-top: 4px;
+            padding: 0 2px;
+        }
+
+        /* ---------- Chart ---------- */
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            height: 440px;
+            border-radius: 16px;
+            background: #fcfdff;
+            border: 1px solid #eef1f5;
+            padding: 6px 4px 0 4px;
+        }
+
+        #valuationChart {
+            width: 100%;
+            height: 100%;
+        }
+
+        .growth-chart-wrapper {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            border-radius: 16px;
+            background: #fcfdff;
+            border: 1px solid #eef1f5;
+            padding: 6px 4px 0 4px;
+            margin-top: 20px;
+        }
+
+        #growthChart {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ---------- Footer Note ---------- */
+        .footer-note {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            font-size: 12px;
+            color: #8899aa;
+            border-top: 1px solid #eef1f5;
+            padding-top: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .footer-note .note-left span {
+            margin-right: 18px;
+        }
+
+        .footer-note .note-right {
+            font-weight: 450;
+            color: #5a6a7a;
+        }
+
+        /* ---------- Data Table ---------- */
+        .data-table-wrapper {
+            margin-top: 24px;
+            overflow-x: auto;
+            border-radius: 14px;
+            border: 1px solid #e8ecf2;
+            background: #fafcff;
+            padding: 4px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 680px;
+        }
+
+        .data-table th {
+            background: #f0f4fe;
+            color: #1a3b6e;
+            font-weight: 600;
+            padding: 12px 16px;
+            text-align: center;
+            border-bottom: 2px solid #dde3ed;
+        }
+
+        .data-table td {
+            padding: 10px 16px;
+            text-align: center;
+            border-bottom: 1px solid #eef1f5;
+            color: #2c3e50;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table .row-label {
+            font-weight: 550;
+            text-align: left;
+            color: #1a2b3e;
+            background: #f8faff;
+            white-space: nowrap;
+        }
+
+        .data-table .row-label .en {
+            font-weight: 350;
+            font-size: 12px;
+            color: #8899aa;
+            margin-left: 4px;
+        }
+
+        .data-table .year-col {
+            font-weight: 570;
+            color: #0b1a33;
+        }
+
+        .data-table .highlight {
+            background: #f0f9ff;
+        }
+
+        .data-table .num {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ---------- Usage Instructions ---------- */
+        .instructions {
+            margin-top: 24px;
+            padding: 20px 24px;
+            background: #f9faff;
+            border-radius: 16px;
+            border: 1px solid #e8ecf2;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #2c3e50;
+        }
+
+        .instructions h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #0b1a33;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .instructions h3 .en {
+            font-weight: 400;
+            font-size: 14px;
+            color: #8899aa;
+        }
+
+        .instructions ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .instructions li::before {
+            content: "•";
+            position: absolute;
+            left: 4px;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        .instructions .en-hint {
+            color: #8899aa;
+            font-size: 13px;
+            margin-left: 4px;
+        }
+
+        .instructions .warning {
+            margin-top: 12px;
+            padding: 10px 16px;
+            background: #fff8e1;
+            border-radius: 8px;
+            border-left: 4px solid #f59e0b;
+            font-size: 13px;
+        }
+
+        /* ---------- Responsive ---------- */
+        @media (max-width: 1340px) {
+            .controls {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 1140px) {
+            .controls {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .container {
+                padding: 20px 18px 24px;
+            }
+            .chart-wrapper {
+                height: 340px;
+            }
+            .growth-chart-wrapper {
+                height: 210px;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .controls {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .brand-text h1 {
+                font-size: 20px;
+            }
+            .brand-text h1 .en {
+                font-size: 16px;
+                display: block;
+                margin-left: 0;
+                margin-top: 2px;
+            }
+            .base-bar {
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                padding: 10px 16px;
+            }
+            .base-divider {
+                display: none;
+            }
+            .chart-wrapper {
+                height: 270px;
+            }
+            .growth-chart-wrapper {
+                height: 180px;
+            }
+            .instructions {
+                padding: 16px 18px;
+                font-size: 13px;
+            }
+            .instructions h3 {
+                font-size: 15px;
+            }
+            .data-table {
+                font-size: 13px;
+            }
+            .data-table th, .data-table td {
+                padding: 8px 10px;
+            }
+        }
+
+        @media (max-width: 540px) {
+            body {
+                padding: 8px;
+            }
+            .container {
+                padding: 14px 12px 18px;
+                border-radius: 16px;
+            }
+            .controls {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .control-card {
+                padding: 10px 10px 12px;
+            }
+            .control-card .ctrl-label .name {
+                font-size: 12px;
+            }
+            .control-card .ctrl-label .name-en {
+                font-size: 10px;
+            }
+            .control-card .ctrl-label .val {
+                font-size: 15px;
+                min-width: 45px;
+            }
+            .chart-wrapper {
+                height: 220px;
+            }
+            .growth-chart-wrapper {
+                height: 155px;
+            }
+            .footer-note {
+                flex-direction: column;
+                align-items: flex-start;
+                font-size: 11px;
+            }
+            .logo-text {
+                width: 44px;
+                height: 44px;
+                font-size: 16px;
+            }
+            .brand-text h1 {
+                font-size: 18px;
+            }
+            .brand-text .sub {
+                font-size: 12px;
+            }
+            .data-table {
+                font-size: 12px;
+                min-width: 560px;
+            }
+            .data-table th, .data-table td {
+                padding: 6px 8px;
+            }
+        }
+
+        @media (max-width: 410px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            .chart-wrapper {
+                height: 195px;
+            }
+            .growth-chart-wrapper {
+                height: 145px;
+            }
+            .data-table {
+                font-size: 11px;
+                min-width: 470px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- ===== HEADER WITH LOGO ===== -->
+        <div class="header">
+            <div class="brand">
+                <!-- 吉富投资 Logo (文字版) -->
+                <div class="logo-text">吉富</div>
+                <div class="brand-text">
+                    <h1>
+                        吉富投资
+                        <span class="en">JIFU INVESTMENT</span>
+                    </h1>
+                    <div class="sub">AltoBeam 估值模拟器 · Valuation Simulator</div>
+                </div>
+            </div>
+            <div class="lang-toggle">中 / EN</div>
+        </div>
+
+        <!-- ===== BASE DATA BAR ===== -->
+        <div class="base-bar">
+            <div class="base-item">
+                <span class="label">2025 营收</span>
+                <span class="label-en">Revenue</span>
+                <span class="value" id="baseRevenueDisplay">5.35</span>
+                <span class="unit">亿元 / ¥100M</span>
+            </div>
+            <div class="base-divider"></div>
+            <div class="base-item">
+                <span class="label">2025 净利润</span>
+                <span class="label-en">Net Profit</span>
+                <span class="value" id="baseProfitDisplay">0.56</span>
+                <span class="unit">亿元 / ¥100M</span>
+            </div>
+            <div class="base-divider"></div>
+            <div class="base-item">
+                <span class="label">净利润率</span>
+                <span class="label-en">Net Margin</span>
+                <span class="value">10.41%</span>
+            </div>
+        </div>
+
+        <!-- ===== SLIDER CONTROLS ===== -->
+        <div class="controls">
+            <!-- 1. 基础营收增长率 -->
+            <div class="control-card">
+                <div class="ctrl-label">
+                    <span>
+                        <span class="name">基础营收增长率</span>
+                        <span class="name-en">Base Growth</span>
+                    </span>
+                    <span class="val" id="growthVal">15.00%</span>
+                </div>
+                <input type="range" id="growthSlider" min="-10" max="100" value="15" step="1" />
+                <div class="range-labels"><span>-10%</span><span>100%</span></div>
+            </div>
+
+            <!-- 2. 增速年衰减率 -->
+            <div class="control-card">
+                <div class="ctrl-label">
+                    <span>
+                        <span class="name">增速年衰减率</span>
+                        <span class="name-en">Growth Decay</span>
+                    </span>
+                    <span class="val" id="decayVal">1.00%</span>
+                </div>
+                <input type="range" id="decaySlider" min="0" max="20" value="1" step="0.1" />
+                <div class="range-labels"><span>0%</span><span>20%</span></div>
+            </div>
+
+            <!-- 3. 基础净利润率 -->
+            <div class="control-card">
+                <div class="ctrl-label">
+                    <span>
+                        <span class="name">基础净利润率</span>
+                        <span class="name-en">Base Margin</span>
+                    </span>
+                    <span class="val" id="marginVal">20.00%</span>
+                </div>
+                <input type="range" id="marginSlider" min="5" max="30" value="20" step="0.1" />
+                <div class="range-labels"><span>5%</span><span>30%</span></div>
+            </div>
+
+            <!-- 4. 净利润率年变化 -->
+            <div class="control-card">
+                <div class="ctrl-label">
+                    <span>
+                        <span class="name">净利润率年变化</span>
+                        <span class="name-en">Margin Δ/yr</span>
+                    </span>
+                    <span class="val" id="marginChangeVal">0.00%</span>
+                </div>
+                <input type="range" id="marginChangeSlider" min="-5" max="5" value="0" step="0.01" />
+                <div class="range-labels"><span>-5%</span><span>+5%</span></div>
+            </div>
+
+            <!-- 5. PE倍数 -->
+            <div class="control-card">
+                <div class="ctrl-label">
+                    <span>
+                        <span class="name">PE 倍数</span>
+                        <span class="name-en">P/E Multiple</span>
+                    </span>
+                    <span class="val" id="peVal">30.00</span>
+                </div>
+                <input type="range" id="peSlider" min="10" max="200" value="30" step="1" />
+                <div class="range-labels"><span>10</span><span>200</span></div>
+            </div>
+
+            <!-- 6. 流动性折扣 -->
+            <div class="control-card">
+                <div class="ctrl-label">
+                    <span>
+                        <span class="name">流动性折扣</span>
+                        <span class="name-en">Liquidity Disc.</span>
+                    </span>
+                    <span class="val" id="discountVal">0.80</span>
+                </div>
+                <input type="range" id="discountSlider" min="50" max="100" value="80" step="1" />
+                <div class="range-labels"><span>0.50</span><span>1.00</span></div>
+            </div>
+        </div>
+
+        <!-- ===== MAIN VALUATION CHART ===== -->
+        <div class="chart-wrapper">
+            <div id="valuationChart"></div>
+        </div>
+
+        <!-- ===== GROWTH & MARGIN CHART ===== -->
+        <div class="growth-chart-wrapper">
+            <div id="growthChart"></div>
+        </div>
+
+        <!-- ===== FOOTER NOTE ===== -->
+        <div class="footer-note">
+            <div class="note-left">
+                <span>🔵 实际估值 (打折后) / Actual Val.</span>
+                <span>🔴 净利润 / Net Profit</span>
+                <span>🟢 营收增长率 / Rev. Growth</span>
+                <span>🟡 净利润率 / Net Margin</span>
+            </div>
+            <div class="note-right">
+                拖动滑块 · 实时更新 / Drag · Live &nbsp;|&nbsp; AltoBeam © 2026
+            </div>
+        </div>
+
+        <!-- ===== DATA TABLE ===== -->
+        <div class="data-table-wrapper">
+            <table class="data-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>指标 / Metric</th>
+                        <th class="year-col">2025</th>
+                        <th class="year-col">2026E</th>
+                        <th class="year-col">2027E</th>
+                        <th class="year-col">2028E</th>
+                        <th class="year-col">2029E</th>
+                        <th class="year-col">2030E</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- 由 JS 动态填充 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ===== USAGE & READING INSTRUCTIONS ===== -->
+        <div class="instructions">
+            <h3>
+                📖 使用与阅读说明
+                <span class="en">Usage & Reading Guide</span>
+            </h3>
+            <ul>
+                <li>
+                    <strong>操作方式：</strong>拖动上方六个滑块，所有图表和数值将同步更新。
+                    <span class="en-hint">Drag any slider to instantly update charts and values.</span>
+                </li>
+                <li>
+                    <strong>第一张图：</strong>蓝色折线代表 <strong>实际估值（已扣除流动性折扣）</strong>，红色折线代表 <strong>净利润</strong>。左侧 Y 轴为估值（亿元），右侧 Y 轴为净利润（亿元）。
+                    <span class="en-hint">Blue line = discounted valuation; Red line = net profit.</span>
+                </li>
+                <li>
+                    <strong>第二张图：</strong>展示 <strong>营收增长率</strong>（绿线）和 <strong>净利润率</strong>（黄虚线）的逐年变化趋势。X 轴从 2026 年开始，因 2025 年为基准年无增长率。
+                    <span class="en-hint">Green = revenue growth; Yellow dashed = net margin. X-axis starts from 2026.</span>
+                </li>
+                <li>
+                    <strong>关键假设：</strong>营收增长率每年按"衰减率"递减；净利润率每年按"年变化"增减（上限 50%，下限 0%）。
+                    <span class="en-hint">Growth decays annually by the set decay rate; margin changes by the annual delta.</span>
+                </li>
+                <li>
+                    <strong>数据精度：</strong>所有货币数值保留两位小数，百分比保留两位小数。
+                    <span class="en-hint">All figures rounded to two decimal places.</span>
+                </li>
+            </ul>
+            <div class="warning">
+                ⚠️ <strong>免责声明：</strong>本模拟器仅供学习与研究参考，不构成任何投资建议。实际估值受多种因素影响，请结合专业意见审慎决策。<br/>
+                <span class="en-hint">Disclaimer: For educational purposes only. Not financial advice. Always consult a professional.</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ---- DOM refs ----
+            const valuationChartDom = document.getElementById('valuationChart');
+            const growthChartDom = document.getElementById('growthChart');
+            const myValuationChart = echarts.init(valuationChartDom);
+            const myGrowthChart = echarts.init(growthChartDom);
+
+            const growthSlider = document.getElementById('growthSlider');
+            const decaySlider = document.getElementById('decaySlider');
+            const marginSlider = document.getElementById('marginSlider');
+            const marginChangeSlider = document.getElementById('marginChangeSlider');
+            const peSlider = document.getElementById('peSlider');
+            const discountSlider = document.getElementById('discountSlider');
+
+            const growthVal = document.getElementById('growthVal');
+            const decayVal = document.getElementById('decayVal');
+            const marginVal = document.getElementById('marginVal');
+            const marginChangeVal = document.getElementById('marginChangeVal');
+            const peVal = document.getElementById('peVal');
+            const discountVal = document.getElementById('discountVal');
+
+            const baseRevenueDisplay = document.getElementById('baseRevenueDisplay');
+            const baseProfitDisplay = document.getElementById('baseProfitDisplay');
+
+            const tableBody = document.getElementById('tableBody');
+
+            // ---- Constants ----
+            const BASE_REVENUE_RAW = 535438669.72;
+            const BASE_PROFIT_RAW = 55756628.06;
+            const YUAN_TO_YI = 100000000;
+
+            const BASE_REVENUE_YI = BASE_REVENUE_RAW / YUAN_TO_YI;
+            const BASE_PROFIT_YI = BASE_PROFIT_RAW / YUAN_TO_YI;
+
+            const YEARS = ['2025', '2026', '2027', '2028', '2029', '2030'];
+            // 用于表格的年份标签（2026起加E）
+            const YEAR_LABELS = ['2025', '2026E', '2027E', '2028E', '2029E', '2030E'];
+
+            // ---- Helpers ----
+            function fmtPct(v) { return (v * 100).toFixed(2) + '%'; }
+            function fmtNum(v) { return v.toFixed(2); }
+            function fmtYi(v) { return v.toFixed(2); }
+
+            function updateSliderFill(slider) {
+                const min = parseFloat(slider.min) || 0;
+                const max = parseFloat(slider.max) || 100;
+                const val = parseFloat(slider.value);
+                const pct = ((val - min) / (max - min)) * 100;
+                slider.style.setProperty('--fill-pct', pct + '%');
+            }
+
+            // ---- Computation ----
+            function computeData(baseGrowthRate, decayRate, baseNetMargin, marginChange, pe, discount) {
+                const results = [];
+                const growthRates = [];
+                const marginRates = [];
+                let prevRevenue = BASE_REVENUE_RAW;
+                let currentGrowthRate = baseGrowthRate;
+                let currentMarginRate = baseNetMargin;
+
+                for (let i = 0; i < YEARS.length; i++) {
+                    let revenue, profit;
+                    if (i === 0) {
+                        revenue = BASE_REVENUE_RAW;
+                        profit = BASE_PROFIT_RAW;
+                        growthRates.push(null);
+                        marginRates.push(BASE_PROFIT_RAW / BASE_REVENUE_RAW);
+                    } else {
+                        growthRates.push(currentGrowthRate);
+                        revenue = prevRevenue * (1 + currentGrowthRate);
+                        currentGrowthRate = currentGrowthRate * (1 - decayRate);
+                        if (currentGrowthRate < -1.0) currentGrowthRate = -1.0;
+
+                        profit = revenue * currentMarginRate;
+                        marginRates.push(currentMarginRate);
+
+                        currentMarginRate = currentMarginRate + marginChange;
+                        if (currentMarginRate < 0) currentMarginRate = 0;
+                        else if (currentMarginRate > 0.5) currentMarginRate = 0.5;
+                    }
+                    const theoreticalVal = profit * pe;
+                    const actualVal = theoreticalVal * discount;
+
+                    results.push({
+                        year: YEARS[i],
+                        revenue: revenue / YUAN_TO_YI,
+                        profit: profit / YUAN_TO_YI,
+                        theoreticalVal: theoreticalVal / YUAN_TO_YI,
+                        actualVal: actualVal / YUAN_TO_YI,
+                        growthRate: i === 0 ? null : growthRates[i],
+                        marginRate: marginRates[i]
+                    });
+
+                    if (i !== 0) prevRevenue = revenue;
+                }
+                return { results, growthRates, marginRates };
+            }
+
+            // ---- Render Valuation Chart ----
+            function renderValuationChart(data) {
+                const valuations = data.map(d => d.actualVal);
+                const profits = data.map(d => d.profit);
+                const revenues = data.map(d => d.revenue);
+
+                const maxVal = Math.max(...valuations, 0.1);
+                const maxProfit = Math.max(...profits, 0.01);
+
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        backgroundColor: 'rgba(255,255,255,0.96)',
+                        borderColor: '#d0d8e4',
+                        borderWidth: 1,
+                        padding: [12, 18],
+                        textStyle: { color: '#1a2332', fontSize: 13 },
+                        formatter: function(params) {
+                            const year = params[0].axisValue;
+                            let html = '<strong style="font-size:15px;">' + year + '</strong><br/>';
+                            params.forEach(p => {
+                                const marker = p.marker || '●';
+                                const val = p.value;
+                                let unit = '亿元 / ¥100M';
+                                let label = p.seriesIndex === 0 ? '实际估值 (打折后) / Actual Val.' : '净利润 / Net Profit';
+                                html += marker + ' ' + label + '：<strong>' + val.toFixed(2) + '</strong> ' + unit + '<br/>';
+                            });
+                            const idx = YEARS.indexOf(year);
+                            if (idx !== -1) {
+                                const revYi = revenues[idx];
+                                const profitYi = profits[idx];
+                                html += '──────────────<br/>';
+                                html += '📦 营收 / Revenue：<strong>' + revYi.toFixed(2) + '</strong> 亿元<br/>';
+                                html += '💰 净利润 / Net Profit：<strong>' + profitYi.toFixed(2) + '</strong> 亿元';
+                                if (idx > 0) {
+                                    const gr = data[idx].growthRate;
+                                    html += '<br/>📈 增长率 / Growth：<strong>' + (gr * 100).toFixed(2) + '%</strong>';
+                                }
+                            }
+                            return html;
+                        }
+                    },
+                    legend: {
+                        data: ['实际估值 (打折后) / Actual Val.', '净利润 / Net Profit'],
+                        top: 0,
+                        left: 'center',
+                        textStyle: { color: '#3d4e62' },
+                        itemGap: 30
+                    },
+                    grid: { top: 60, bottom: 60, left: 65, right: 65 },
+                    xAxis: {
+                        type: 'category',
+                        data: YEARS,
+                        axisLine: { lineStyle: { color: '#c1cad5' } },
+                        axisTick: { show: false },
+                        axisLabel: { color: '#5a6a7a', fontSize: 13 },
+                        splitLine: { show: false }
+                    },
+                    yAxis: [
+                        {
+                            type: 'value',
+                            name: '估值 (亿元) / Val. (¥100M)',
+                            nameTextStyle: { color: '#3b82f6', fontSize: 12 },
+                            position: 'left',
+                            axisLine: { show: true, lineStyle: { color: '#3b82f6' } },
+                            axisLabel: { color: '#3b82f6', formatter: '{value}' },
+                            splitLine: { lineStyle: { type: 'dashed', color: '#e9edf2' } },
+                            min: 0,
+                            max: function(value) { return Math.max(value.max, maxVal * 1.1); }
+                        },
+                        {
+                            type: 'value',
+                            name: '净利润 (亿元) / Profit (¥100M)',
+                            nameTextStyle: { color: '#ef4444', fontSize: 12 },
+                            position: 'right',
+                            axisLine: { show: true, lineStyle: { color: '#ef4444' } },
+                            axisLabel: { color: '#ef4444', formatter: '{value}' },
+                            splitLine: { show: false },
+                            min: 0,
+                            max: function(value) { return Math.max(value.max, maxProfit * 1.2); }
+                        }
+                    ],
+                    series: [
+                        {
+                            name: '实际估值 (打折后) / Actual Val.',
+                            type: 'line',
+                            yAxisIndex: 0,
+                            data: valuations,
+                            symbol: 'circle',
+                            symbolSize: 8,
+                            lineStyle: { width: 3, color: '#3b82f6' },
+                            itemStyle: { color: '#3b82f6', borderWidth: 2, borderColor: '#ffffff' },
+                            areaStyle: {
+                                color: {
+                                    type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [
+                                        { offset: 0, color: 'rgba(59, 130, 246, 0.2)' },
+                                        { offset: 1, color: 'rgba(59, 130, 246, 0.05)' }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            name: '净利润 / Net Profit',
+                            type: 'line',
+                            yAxisIndex: 1,
+                            data: profits,
+                            symbol: 'circle',
+                            symbolSize: 8,
+                            lineStyle: { width: 3, color: '#ef4444' },
+                            itemStyle: { color: '#ef4444', borderWidth: 2, borderColor: '#ffffff' }
+                        }
+                    ],
+                    animation: true,
+                    animationDuration: 500
+                };
+                myValuationChart.setOption(option, { notMerge: true });
+            }
+
+            // ---- Render Growth Chart ----
+            function renderGrowthChart(growthRates, marginRates) {
+                const growthData = growthRates.slice(1).map(r => r === null ? null : (r * 100));
+                const marginData = marginRates.slice(1).map(r => r === null ? null : (r * 100));
+                const yearsForChart = YEARS.slice(1);
+
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        backgroundColor: 'rgba(255,255,255,0.96)',
+                        borderColor: '#d0d8e4',
+                        borderWidth: 1,
+                        padding: [10, 16],
+                        textStyle: { color: '#1a2332', fontSize: 12 },
+                        formatter: function(params) {
+                            const year = params[0].axisValue;
+                            let html = '<strong>' + year + '</strong><br/>';
+                            params.forEach(p => {
+                                const marker = p.marker || '●';
+                                const val = p.value;
+                                let label = p.seriesName;
+                                html += marker + ' ' + label + '：<strong>' + val.toFixed(2) + '%</strong><br/>';
+                            });
+                            return html;
+                        }
+                    },
+                    title: {
+                        text: '逐年营收增长率与净利润率变化 / Annual Growth & Margin Trends',
+                        left: 'center',
+                        textStyle: { fontSize: 14, color: '#1a2332' }
+                    },
+                    grid: { top: 50, bottom: 40, left: 58, right: 30 },
+                    xAxis: {
+                        type: 'category',
+                        data: yearsForChart,
+                        axisLine: { lineStyle: { color: '#c1cad5' } },
+                        axisTick: { show: false },
+                        axisLabel: { color: '#5a6a7a', fontSize: 12 }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '百分比 (%) / Percentage',
+                        nameTextStyle: { color: '#10b981', fontSize: 12 },
+                        axisLine: { show: true, lineStyle: { color: '#10b981' } },
+                        axisLabel: { color: '#10b981', formatter: '{value}%' },
+                        splitLine: { lineStyle: { type: 'dashed', color: '#e9edf2' } }
+                    },
+                    series: [
+                        {
+                            name: '营收增长率 / Rev. Growth',
+                            type: 'line',
+                            data: growthData,
+                            symbol: 'circle',
+                            symbolSize: 6,
+                            lineStyle: { width: 2, color: '#10b981' },
+                            itemStyle: { color: '#10b981', borderWidth: 2, borderColor: '#ffffff' },
+                            areaStyle: {
+                                color: {
+                                    type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [
+                                        { offset: 0, color: 'rgba(16, 185, 129, 0.2)' },
+                                        { offset: 1, color: 'rgba(16, 185, 129, 0.05)' }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            name: '净利润率 / Net Margin',
+                            type: 'line',
+                            data: marginData,
+                            symbol: 'circle',
+                            symbolSize: 6,
+                            lineStyle: { width: 2, type: 'dashed', color: '#f59e0b' },
+                            itemStyle: { color: '#f59e0b', borderWidth: 2, borderColor: '#ffffff' }
+                        }
+                    ],
+                    animation: true,
+                    animationDuration: 500
+                };
+                myGrowthChart.setOption(option, { notMerge: true });
+            }
+
+            // ---- Render Data Table ----
+            function renderTable(data, growthRates, marginRates, pe, discount) {
+                // 清空表格
+                tableBody.innerHTML = '';
+                
+                // 1. 营收增速
+                const growthRow = document.createElement('tr');
+                const growthLabel = document.createElement('td');
+                growthLabel.className = 'row-label';
+                growthLabel.innerHTML = '营收增速 / Rev. Growth<span class="en">(Annual)</span>';
+                growthRow.appendChild(growthLabel);
+                
+                for (let i = 0; i < data.length; i++) {
+                    const td = document.createElement('td');
+                    td.className = 'num';
+                    if (i === 0) {
+                        td.textContent = '—';
+                    } else {
+                        td.textContent = fmtPct(growthRates[i]);
+                    }
+                    growthRow.appendChild(td);
+                }
+                tableBody.appendChild(growthRow);
+                
+                // 2. 营收
+                const revenueRow = document.createElement('tr');
+                const revenueLabel = document.createElement('td');
+                revenueLabel.className = 'row-label';
+                revenueLabel.innerHTML = '营收 / Revenue<span class="en">(¥100M)</span>';
+                revenueRow.appendChild(revenueLabel);
+                
+                for (let i = 0; i < data.length; i++) {
+                    const td = document.createElement('td');
+                    td.className = 'num';
+                    td.textContent = fmtYi(data[i].revenue);
+                    revenueRow.appendChild(td);
+                }
+                tableBody.appendChild(revenueRow);
+                
+                // 3. 净利润率
+                const marginRow = document.createElement('tr');
+                const marginLabel = document.createElement('td');
+                marginLabel.className = 'row-label';
+                marginLabel.innerHTML = '净利润率 / Net Margin<span class="en">(%)</span>';
+                marginRow.appendChild(marginLabel);
+                
+                for (let i = 0; i < data.length; i++) {
+                    const td = document.createElement('td');
+                    td.className = 'num';
+                    td.textContent = fmtPct(marginRates[i]);
+                    marginRow.appendChild(td);
+                }
+                tableBody.appendChild(marginRow);
+                
+                // 4. 净利润
+                const profitRow = document.createElement('tr');
+                const profitLabel = document.createElement('td');
+                profitLabel.className = 'row-label';
+                profitLabel.innerHTML = '净利润 / Net Profit<span class="en">(¥100M)</span>';
+                profitRow.appendChild(profitLabel);
+                
+                for (let i = 0; i < data.length; i++) {
+                    const td = document.createElement('td');
+                    td.className = 'num';
+                    td.textContent = fmtYi(data[i].profit);
+                    profitRow.appendChild(td);
+                }
+                tableBody.appendChild(profitRow);
+                
+                // 5. PE倍数
+                const peRow = document.createElement('tr');
+                const peLabel = document.createElement('td');
+                peLabel.className = 'row-label';
+                peLabel.innerHTML = 'PE 倍数 / P/E Multiple<span class="en">(x)</span>';
+                peRow.appendChild(peLabel);
+                
+                for (let i = 0; i < data.length; i++) {
+                    const td = document.createElement('td');
+                    td.className = 'num';
+                    td.textContent = fmtNum(pe);
+                    peRow.appendChild(td);
+                }
+                tableBody.appendChild(peRow);
+                
+                // 6. 流动性折扣
+                const discountRow = document.createElement('tr');
+                const discountLabel = document.createElement('td');
+                discountLabel.className = 'row-label';
+                discountLabel.innerHTML = '流动性折扣 / Liquidity Disc.<span class="en">(x)</span>';
+                discountRow.appendChild(discountLabel);
+                
+                for (let i = 0; i < data.length; i++) {
+                    const td = document.createElement('td');
+                    td.className = 'num';
+                    td.textContent = discount.toFixed(2);
+                    discountRow.appendChild(td);
+                }
+                tableBody.appendChild(discountRow);
+                
+                // 7. 预计估值
+                const valuationRow = document.createElement('tr');
+                const valuationLabel = document.createElement('td');
+                valuationLabel.className = 'row-label';
+                valuationLabel.innerHTML = '预计估值 / Est. Valuation<span class="en">(¥100M)</span>';
+                valuationRow.appendChild(valuationLabel);
+                
+                for (let i = 0; i < data.length; i++) {
+                    const td = document.createElement('td');
+                    td.className = 'num highlight';
+                    td.textContent = fmtYi(data[i].actualVal);
+                    valuationRow.appendChild(td);
+                }
+                tableBody.appendChild(valuationRow);
+            }
+
+            // ---- Main Render ----
+            function render() {
+                const gRaw = parseFloat(growthSlider.value);
+                const dRaw = parseFloat(decaySlider.value);
+                const mRaw = parseFloat(marginSlider.value);
+                const mcRaw = parseFloat(marginChangeSlider.value);
+                const peRaw = parseFloat(peSlider.value);
+                const disRaw = parseFloat(discountSlider.value);
+
+                const baseGrowthRate = gRaw / 100;
+                const decayRate = dRaw / 100;
+                const baseNetMargin = mRaw / 100;
+                const marginChange = mcRaw / 100;
+                const pe = peRaw;
+                const discount = disRaw / 100;
+
+                updateSliderFill(growthSlider);
+                updateSliderFill(decaySlider);
+                updateSliderFill(marginSlider);
+                updateSliderFill(marginChangeSlider);
+                updateSliderFill(peSlider);
+                updateSliderFill(discountSlider);
+
+                growthVal.textContent = fmtPct(baseGrowthRate);
+                decayVal.textContent = fmtPct(decayRate);
+                marginVal.textContent = fmtPct(baseNetMargin);
+                marginChangeVal.textContent = fmtPct(marginChange);
+                peVal.textContent = fmtNum(pe);
+                discountVal.textContent = discount.toFixed(2);
+
+                baseRevenueDisplay.textContent = fmtYi(BASE_REVENUE_YI);
+                baseProfitDisplay.textContent = fmtYi(BASE_PROFIT_YI);
+
+                const { results, growthRates, marginRates } = computeData(baseGrowthRate, decayRate, baseNetMargin, marginChange, pe, discount);
+                
+                renderValuationChart(results);
+                renderGrowthChart(growthRates, marginRates);
+                renderTable(results, growthRates, marginRates, pe, discount);
+            }
+
+            // ---- Init ----
+            [growthSlider, decaySlider, marginSlider, marginChangeSlider, peSlider, discountSlider].forEach(slider => {
+                slider.addEventListener('input', render);
+                updateSliderFill(slider);
+            });
+
+            render();
+
+            window.addEventListener('resize', function() {
+                myValuationChart.resize();
+                myGrowthChart.resize();
+            });
+        })();
+    </script>
+</body>
+</html>
